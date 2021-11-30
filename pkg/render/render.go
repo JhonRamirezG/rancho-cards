@@ -7,30 +7,52 @@ import (
 	"log"
 	"net/http"
 	"path/filepath"
+
+	"github.com/jhonrmz/rancho-cards/pkg/config"
+	"github.com/jhonrmz/rancho-cards/pkg/models"
 )
 
 //*This is a map of function that I can use in templates. This is to do things that are not inside the Go templates, like format Dates.
 var functions = template.FuncMap{}
 
+var app *config.AppConfig
+
+//* NewTemplate sets the config for the template package.
+func NewTemplates(a *config.AppConfig) {
+	app = a
+}
+
 const filePathTemplates = "./templates/*.layout.html"
 
-func RenderTemplate(w http.ResponseWriter, tmpl string) {
-	//* Every Time I render a template I want to render it with the base layout + the unique content of the file.
-	tc, err := CrateTemplateCache()
-	if err != nil {
-		log.Fatal(err)
+func AddDefaultData(td *models.TemplateData) *models.TemplateData {
+	return td
+}
+
+func RenderTemplate(w http.ResponseWriter, tmpl string, td *models.TemplateData) {
+	//Set the variable tc here to can be used out side the if statement.
+	var tc map[string]*template.Template
+	//* This is to validate if we are in developer if app.UseCache is True otherwise we'll read the tempalates from the disk.
+	if app.UseCache {
+		//* Every Time I render a template I want to render it with the base layout + the unique content of the file.
+		tc = app.TemplateCache
+	} else {
+		tc, _ = CrateTemplateCache()
 	}
 	//* We take the template base on the tmpl that is the name of html, "ok" is to check if the template in tmpl exists if exist "ok" w'll have the value of true.
 	t, ok := tc[tmpl]
 	if !ok {
-		log.Fatal(err)
+		log.Fatal("Could not get template from templateCache")
 	}
 	//* I need put the parse template that I have in memory into some bytes.
 	buf := new(bytes.Buffer)
-	//* Take the template that I have execute it, don't pass any data and store the value in buf variable.
-	_ = t.Execute(buf, nil)
 
-	_, err = buf.WriteTo(w)
+	//* This is the call to set more data when is needed.
+	td = AddDefaultData(td)
+
+	//* Take the template that I have execute it, don't pass any data and store the value in buf variable.
+	_ = t.Execute(buf, td)
+
+	_, err := buf.WriteTo(w)
 	if err != nil {
 		fmt.Println("Error writting template to the browser", err)
 	}
