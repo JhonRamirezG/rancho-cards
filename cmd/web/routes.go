@@ -24,5 +24,9 @@ func routes(app *config.AppConfig) http.Handler {
 	mux.Get("/offers", handlers.Repo.Offers)
 	mux.Get("/orders", handlers.Repo.Orders)
 
+	//* Allows to get content like images
+	fileServer := http.FileServer(http.Dir("./static/"))
+	mux.Handle("/static/*", http.StripPrefix("/static", fileServer))
+
 	return mux
 }
