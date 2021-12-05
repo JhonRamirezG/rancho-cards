@@ -16,7 +16,7 @@ func routes(app *config.AppConfig) http.Handler {
 	//* Call to the midleware.
 	mux.Use(middleware.Recoverer)
 	mux.Use(NoSurf)
-
+	mux.Use(SessionLoad)
 	//* This is where we set the routes from out application using the package chi.
 	mux.Get("/", handlers.Repo.Home)
 	mux.Get("/about", handlers.Repo.About)

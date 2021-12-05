@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
+	"github.com/alexedwards/scs/v2"
 	"github.com/jhonrmz/rancho-cards/pkg/config"
 	"github.com/jhonrmz/rancho-cards/pkg/handlers"
 	"github.com/jhonrmz/rancho-cards/pkg/render"
@@ -12,9 +14,24 @@ import (
 
 const portNumber = ":8080"
 
+var app config.AppConfig
+
+var session *scs.SessionManager
+
 //* main is the main func
 func main() {
-	var app config.AppConfig
+
+	// Change to true when is production
+	app.InProduction = false
+	//Create the session
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
+	session.Cookie.Persist = true
+	session.Cookie.SameSite = http.SameSiteLaxMode
+	session.Cookie.Secure = app.InProduction
+
+	//Store the session int he app configuration session.
+	app.Session = session
 
 	tc, err := render.CrateTemplateCache()
 	if err != nil {
