@@ -32,13 +32,14 @@ func main() {
 	//* This make to our render package access to the configuration file for the app.
 	render.NewTemplates(&app)
 
-	http.HandleFunc("/", handlers.Repo.Home)
-	http.HandleFunc("/about", handlers.Repo.About)
-	http.HandleFunc("/shop", handlers.Repo.Shop)
-	http.HandleFunc("/offers", handlers.Repo.Offers)
-	http.HandleFunc("/orders", handlers.Repo.Orders)
-
 	//Start the web server.
 	fmt.Println(fmt.Sprintf("Starting the application on port: %s", portNumber))
-	_ = http.ListenAndServe(portNumber, nil)
+
+	srv := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
+	err = srv.ListenAndServe()
+	log.Fatal(err)
+
 }
